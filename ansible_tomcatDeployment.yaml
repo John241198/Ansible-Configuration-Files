@@ -1,0 +1,29 @@
+- hosts: all
+  become: yes
+  remote_user: ec2-user
+  tasks:
+    - name: Install the latest version of Java
+      yum:
+        name: java
+        state: present
+
+    - name: Download Tomcat
+      ansible.builtin.get_url:
+        url: https://dlcdn.apache.org/tomcat/tomcat-11/v11.0.9/bin/apache-tomcat-11.0.9.tar.gz
+        dest: /opt
+        mode: '0777'
+
+    - name: Unarchive Tomcat tarball
+      ansible.builtin.unarchive:
+        src: /opt/apache-tomcat-11.0.8.tar.gz
+        dest: /opt
+        remote_src: yes
+
+    - name: Start Tomcat using shell
+      ansible.builtin.shell: nohup /opt/apache-tomcat-11.0.8/bin/startup.sh &
+
+    - name: Download sample.war to Tomcat webapps
+      ansible.builtin.get_url:
+        url: https://tomcat.apache.org/tomcat-6.0-doc/appdev/sample/sample.war
+        dest: /opt/apache-tomcat-11.0.8/webapps/sample.war
+        mode: '0777'

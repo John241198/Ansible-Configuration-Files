@@ -1,0 +1,36 @@
+- hosts: all
+  become: yes
+  remote_user: ec2-user
+
+  tasks:
+    - name: Show current user
+      ansible.builtin.command: whoami
+
+    - name: Run a command in root shell using sudo -i
+      ansible.builtin.shell: |
+        sudo -i <<EOF
+        whoami
+        echo "Running as root"
+        EOF
+
+    - name: Download Prometheus Node Exporter
+      ansible.builtin.get_url:
+        url: https://github.com/prometheus/node_exporter/releases/download/v1.9.1/node_exporter-1.9.1.linux-amd64.tar.gz
+        dest: /opt
+        mode: '0644'
+
+    - name: Unarchive Prometheus Node Exporter
+      ansible.builtin.unarchive:
+        src: /opt/node_exporter-1.9.1.linux-amd64.tar.gz
+        dest: /opt
+        remote_src: yes
+
+    - name: Move node_exporter binary to /usr/local/bin
+      ansible.builtin.copy:
+        remote_src: yes
+        src: /opt/node_exporter-1.9.1.linux-amd64
+        dest: /usr/local/bin/
+        mode: '0755'
+
+    - name: Start node_exporter using shell
+      ansible.builtin.shell: nohup /usr/local/bin/node_exporter-1.9.1.linux-amd64/node_exporter &
